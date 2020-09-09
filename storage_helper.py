@@ -1,7 +1,7 @@
 import ipfshttpclient # type: ignore
 import json
 import os
-import sys
+import asyncio
 import hashlib
 
 class storage_helper:
@@ -108,7 +108,7 @@ class storage_helper:
         hash = dict()
         #Check if path is a folder, and upload it accordingly.
         if os.path.isdir(path):
-            hash = client.add(path,recursive=True,wrap_with_directory=True)
+            hash = client.add(path,recursive=True)
             client.name.publish(list(hash[-1].values())[1],key=data_key)
             return True
         else:
@@ -128,7 +128,6 @@ class storage_helper:
             json.dump(data,outfile)
         return True
         
-
     '''Adds a key/value to emr_dict'''
     def add_emr(self,key,value):
         #Retrieve emr_dict
@@ -136,6 +135,8 @@ class storage_helper:
         emr_dict = self.get_emr_dict()
         #Add a new key if necessary
         #If not, make a new value
+        if self.search_emr(key,value) == True:
+            return True
         if key in emr_dict:
             emr_dict[key].append(value)
         else:
@@ -149,19 +150,25 @@ class storage_helper:
         #Retrieve emr_dict
         device_dict = dict()
         device_dict = self.get_device_dict()
-        device_dict[key]=value
-        with open(self.device_hash+ "/device_dict.json","w") as outfile:
-            json.dump(device_dict,outfile)
-        return True
+        if key in device_dict.keys() and value == device_dict[key]:
+            return True
+        else:
+            device_dict[key]=value
+            with open(self.device_hash+ "/device_dict.json","w") as outfile:
+                json.dump(device_dict,outfile)
+            return True
     '''Adds a key/value to emr_dict'''
     def add_pt_val(self,key,value):
         #Retrieve emr_dict
         pt_dict = dict()
         pt_dict = self.get_patient_values()
-        pt_dict[key]=value
-        with open(self.pt_val_hash+ "/patient_values.json","w") as outfile:
-            json.dump(pt_dict,outfile)
-        return True
+        if key in pt_dict.keys() and value == pt_dict[key]:
+            return True
+        else:
+            pt_dict[key]=value
+            with open(self.pt_val_hash+ "/patient_values.json","w") as outfile:
+                json.dump(pt_dict,outfile)
+            return True
 
     #######################
     ### Other Functions ###
@@ -178,44 +185,44 @@ class storage_helper:
         else:
             return False
     
-    #def search_device_dict(self,device_hash,ret=False)
-        #Retrieve device dictionary
+    '''Search emr_dict given key and value. Value must be given as well as value is a list. '''
+    def search_emr(self,key,value):
+        #Retrieve emr_dict
+        emr_dict = self.get_emr_dict()
+        #Add a new key if necessary
+        #If not, make a new value
+        if value in emr_dict[key]:
+            return True
+        else:
+            return False
 
-        #Search device_hash in dictionary
-
-        #If device hash is found
-
-            #If ret = True
-
-                #return the value
-            
-            #If ret is False
-
-                #return False
-
-        #If device hash is not found
-
-            #return False
+    '''Search device_dict for key or value'''
+    def search_device_dict(self,key,ret=False):
+        #Retrieve device_dict
+        device_dict = self.get_device_dict()
+        if key in device_dict and ret==False:
+            return True
+        elif key in device_dict and ret==True:
+            return device_dict[key]
+        else:
+            return False
 
     def hash_config(self,config,type=0):
         '''Hashes the first name, last name and dob of all incoming config files'''
+        '''Why 2 types? 1 for pt values table to actually get the folder. 
+        The other one is to find the title of the file and search device_dict keys'''
         #Collect first name, last name, dob. 
         #Or, if it is a device, identifiers and template
         hashed_config = ""
         if type == 1:
             #Ex. patient_id=124medication_id=14125template=ekg
-            for key,value in config.items():
-                if key != "first_name" or key != "last_name" or key != "dob":
-                    item = str(key + "=" + config[key])
-                    hashed_config += item
+            for key,value in config["identifiers"].items():
+                item = str(key + "=" + config["identifiers"][key])
+                hashed_config += item
+            hashed_config+="template"+ "="+config["template"]
         else:
             hashed_config = "first=" + config["first_name"] + "last=" + config["last_name"]\
             +"dob="+config["dob"]
-        #Generate hash
-        
-        #Return hashed_config without any hashing to be done. 
-        
-        hashed_config = hashlib.sha224(hashed_config.encode()).hexdigest()
         return hashed_config
    
 client = ipfshttpclient.connect()

@@ -1,0 +1,13 @@
+{
+    "parameters": {
+        "compliance": {
+            "min": 0,
+            "max": 1
+        }
+    },
+    "presentation": [
+        "line",
+        "bar",
+        "calendar"
+    ]
+}
