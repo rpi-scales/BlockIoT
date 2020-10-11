@@ -1,8 +1,9 @@
 import json
 import os
-import sys
-import hashlib
+from threading import Thread
+import shutil
 from storage_helper import storage_helper
+import data_template
 
 import ipfshttpclient # type: ignore
 
@@ -15,7 +16,8 @@ class storage:
         self.pt_val_hash = ""
         self.device_hash = ""
 
-    '''Check whether the emr_id is valid by checking emr_dict'''
+    '''Check whether the emr_id is valid by checking emr_dict
+    emr_id is given to the EMR admin when the EMR registers itself.'''
     def check_emr(self,emr_id):
         #Retrieve emr_dict
         emr_dict = helper.get_emr_dict()
@@ -25,28 +27,28 @@ class storage:
         else:
             return False
 
-    '''Generate a key based on patient's first, last and dob'''
     def generate_key(self,config):
+        '''Generate a key based on patient's first, last and dob
+        This is the IPNS key needed to access the patient's folder'''
         hashed_config = "first=" + config["first_name"] + "last=" + config["last_name"]\
             +"dob="+config["dob"]
-        current_keys = dict()
+        #Check if key is already made currently
         for element in client.key.list()['Keys']:
             if list(element.values())[0] == hashed_config:
                 return list(element.values())[1]
         key = list(client.key.gen(hashed_config,type='rsa').values())[1]
         return key
 
-    '''Checks whether a config file has First name, last name and DOB.'''
-    '''A config file is a dictionary with patient value'''
-    '''For Devices, must have at least 2 identifiers'''
     def check_config(self,config,type):
+        '''Checks whether a config file has First name, last name and DOB.'''
+        '''A config file is a dictionary with patient value'''
+        '''For Devices, must have at least 2 identifiers'''
         #type == 1 refers to an EMR
         if type == 1:
             #Ensure first, last and dob is present
-            if "first_name" in config["characteristics"].keys() and \
-                "last_name" in config["characteristics"].keys() and \
-                "dob" in config["characteristics"].keys():
-                
+            if "first_name" in config.keys() and \
+                "last_name" in config.keys() and \
+                "dob" in config.keys():
                 if len(config["dob"]) == 10 and config["dob"].count('/') == 2:
                     return True
                 else:
@@ -56,17 +58,27 @@ class storage:
         #type == 2 refers to a Device
         if type == 2:
             #Ensure first, last, template and dob is present
-            if "first_name" in config.keys() and "template" in config.keys() and "last_name" in config.keys() and "dob" in config.keys():
-                if len(config["dob"]) == 10 and config["dob"].count('/') == 2:
-                    return True
+            if "first_name" in config["characteristics"].keys() and \
+            "last_name" in config["characteristics"].keys() and \
+            "dob" in config["characteristics"].keys():
+                if len(config["characteristics"]["dob"]) == 10 and \
+                config["characteristics"]["dob"].count('/') == 2:
+                    if "identifiers" in config.keys() and \
+                    "template" in config.keys() and \
+                    "data" in config.keys():
+                        return True
                 else:
                     return False
             else:
                 return False
 
-    '''Setup a new patient'''
     def pt_setup(self,config):
+        '''Setup a new patient's configuration file'''
         #Create a new folder with title patient_data
+        try:
+            shutil.rmtree("patient_data")
+        except:
+            pass
         os.mkdir("patient_data")
         #Modify config dict so that the key is config, and identifiers are not in file. 
         new_config = dict()
@@ -81,102 +93,117 @@ class storage:
             json.dump(new_config,outfile)
         return True
 
-    '''Create a new device file for the patient'''
     def add_device_setup(self,config,path=""):
-        #Delete this line. File title is for now just a string of the patient information
+        '''Create a new device file for the patient
+        If path is not changed, it means that a new patient is being made
+        If it is changed, patient already has his/her folder'''
         file_title = helper.hash_config(config,type=1)
-
-        new_config = dict()
-        for key,value in config.items():
-            if key == "first_name" or key == "last_name" or key == "dob":
-                continue
-            else:
-                new_config[key] = value
         if path == "":
-
-            #No need to use patient_data. Delete that folder
             with open("patient_data/"+str(file_title)+".json","w") as outfile:
-                json.dump(new_config,outfile)
+                json.dump(config,outfile)
         else:
             with open(path+"/"+str(file_title)+".json","w") as outfile:
-                json.dump(new_config,outfile)
+                json.dump(config,outfile)
 
-    '''Handle creation of a new patient from emr side'''
     def emr_patient(self,config,emr_id):
-        #Check if config file is valid
-        if self.check_config(config,type=1) == False:
-            return 1
-        #Check if emr is valid. 
-        if self.check_emr(emr_id) == False:
-            return 2
-        #Hash config values to search patient values dict
-        pt_val_key = helper.hash_config(config)
-        #Search patient values dict for the config values
-        if helper.search_pt_val(pt_val_key) == True:
+        '''Handle creation of a new patient from emr side'''
+        #Check if emr is correct by checking for emr_id in emr_dict
+        if sample.check_emr(emr_id) == False:
+            return "EMR_ID is incorrect!"
+        if sample.check_config(config,type=1) == False:
+            return "Configuration file is invalid!"
+        #Create shorthand form of config file
+        config_shorthand = helper.hash_config(config)
+        #Search shorthand
+        pt_values_found = helper.search_pt_val(config_shorthand,ret=True)
+        if pt_values_found == False:
+            sample.pt_setup(config)
+            key = self.generate_key(config)
+            #Upload patient folder
+            t1 = Thread(target=helper.upload_data,args=("patient_data",key))
+            t1.start()
+            #Add patient values
+            t2 = Thread(target=helper.add_pt_val,args=(config_shorthand,key))
+            t2.start()
+            #Add emr values
+            t3 = Thread(target=helper.add_emr,args=(emr_id,config_shorthand))
+            t3.start()
+            t2.join()
+            t3.join()
+        else:
             #Add patient to the emr_dict
             key = self.generate_key(config)
-            helper.add_emr(emr_id,key)
-            helper.add_pt_val(pt_val_key,key)
-        else:
-            #If not found, create a new folder for patient. 
-            self.pt_setup(config)
-            #Upload folder to IPFS.
-            key = self.generate_key(config)
-            helper.upload_data("patient_data",key)
-            #Add new key/value to the emr_dict
-            helper.add_emr(emr_id,key)
-            helper.add_pt_val(pt_val_key,key)
+            helper.add_pt_val(config_shorthand,key)
+            helper.add_emr(emr_id,config_shorthand)
         #Re-upload emr_dict
-        helper.upload_emr_dict()
+        Thread(target = helper.upload_emr_dict).start()
         #Re-upload patient_values
-        helper.upload_patient_values()
+        Thread(target = helper.upload_patient_values).start()
         return True
 
-    '''Handle creation of a new patient from device side'''
     def device_patient(self,config):
-        #Check if config file is valid
-        if self.check_config(config,type=2) == False:
-            return 1
-        #Hash config values to search patient values dict
-        pt_val_key = helper.hash_config(config)
-        #Search patient values dict for the config values
-        key = helper.search_pt_val(pt_val_key,ret=True)
-        if key == False:
-            #If not found, create a new folder for patient. 
-            self.pt_setup(config)
-            self.add_device_setup(config)
-            #Upload folder to IPFS.
-            key = self.generate_key(config)
-            helper.upload_data("patient_data",key)
-            #Update and upload patient values
-            helper.add_pt_val(pt_val_key,key)
-            helper.upload_patient_values()
+        if sample.check_config(config,type=2) == False:
+            return "Configuration file is invalid!"
+        #Create shorthand form of config file
+        config_shorthand = helper.hash_config(config["characteristics"])
+        pt_values_found = helper.search_pt_val(config_shorthand,ret=True)
+        if pt_values_found == False:
+            #Make a new folder with patient's config file. 
+            sample.pt_setup(config["characteristics"])
+            sample.add_device_setup(config)
+            #Generate the key
+            key = sample.generate_key(config["characteristics"])
+            #Upload this folder
+            Thread(target = helper.upload_data,args=("patient_data",key)).start()
+            #Add patient to patient values and device dict
+            helper.add_pt_val(config_shorthand,key)
             helper.add_device(helper.hash_config(config,type=1),key)
-            helper.upload_device_dict()
+            #Upload all
+            Thread(target = helper.upload_patient_values).start()
+            Thread(target = helper.upload_device_dict).start()
+            return True
         else:
-            key = self.generate_key(config)
-            hash = helper.get_data_folder(key)
-            self.add_device_setup(config,hash)
-            helper.upload_patient_values()
+            #Retrieve the folder
+            key = sample.generate_key(config["characteristics"])
+            folder_name = helper.get_data_folder(key)
+            sample.add_device_setup(config,path=folder_name)
+            #Upload this folder
+            Thread(target = helper.upload_data,args=(folder_name,key)).start()
+            #Add patient to device dictionary
             helper.add_device(helper.hash_config(config,type=1),key)
-            helper.upload_device_dict()
-
+            Thread(target = helper.upload_device_dict).start()
+            return True
+    
 #Classic Sample Patient: manan shukla 011201
 client = ipfshttpclient.connect()
-sample_config = {
-    "characteristics":{
-        "first_name":"manan",
-        "last_name":"shukla",
-        "dob":"01/12/2001"
-    },
-    "template":"adherence",
-    "identifiers":{
-        "patient_id":"12d345",
-        "medication_id":"678f9"},
-    "data":{
-        "Pills Taken":"int"
+sample_config_device = {
+    "party": "DEVICE",
+    "config":{
+        "characteristics":{
+            "first_name":"kavin",
+            "last_name":"shukla",
+            "dob":"06/19/2004"
+        },
+        "template":"adherence",
+        "identifiers":{
+            "patient_id":"13841c",
+            "medication_id":"280s4"},
+        "data":{
+            "Pills Taken":"compliance"
+        }
     }
 }
+
+sample_config_emr = {
+    "party": "EMR",
+    "emr_id": "00000",
+    "config":{
+        "first_name": "kavin",
+        "last_name": "shukla",
+        "dob": "06/19/2004"
+    }
+}
+
 sample = storage()
 helper = storage_helper()
-print(helper.check_config
+template = data_template.data_template()
