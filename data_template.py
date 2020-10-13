@@ -13,10 +13,20 @@ import plotly # type: ignore
 
 class data_template:
     def __init__(self):
-        self.template_dict="QmYBRghZRZLpVcwrF29VUuqgJkVJWz6RFBvPFyWfZWaf6z"
+        self.template_dict=""
         self.template_hash = ""
         self.pt_val_hash = ""
         self.device_hash = ""
+        try:
+            self.setup()
+        except:
+            pass
+
+    def setup(self):
+        setup_dict= list()
+        with open("env.json","r") as infile:
+            setup_dict = json.load(infile)
+        self.template_dict = setup_dict[3]
 
     def verify_labels(self,packet):
         '''Verify labels to see if the data is valid'''

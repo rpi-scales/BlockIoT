@@ -9,12 +9,24 @@ import hashlib
 
 class storage_helper:
     def __init__(self):
-        self.patient_values_peer = "QmX2EGscc7jbRwNtUdU9Mkp5Y7zaNUrrWrFq2v8Ai7f1GM"
-        self.emr_dict_key = "QmSQCE5pZ4jAaxdBbrZs6PKB3mWUUH2kewvJT3jEXtQQEu"
-        self.device_dict_key = "QmaZvWEJbSyptzD4bVHMZhYLjNEZn2eJAdpbBzPGzDkDuU"
+        self.patient_values_peer = ""
+        self.emr_dict_key = ""
+        self.device_dict_key = ""
         self.emr_hash = ""
         self.pt_val_hash = ""
         self.device_hash = ""
+        try:
+            self.setup()
+        except:
+            pass
+
+    def setup(self):
+        setup_dict= list()
+        with open("env.json","r") as infile:
+            setup_dict = json.load(infile)
+        self.emr_dict_key = setup_dict[0]
+        self.patient_values_peer = setup_dict[1]
+        self.device_dict_key = setup_dict[2]
 
     ######################
     ###### GETTERS #######

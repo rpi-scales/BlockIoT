@@ -9,12 +9,24 @@ import ipfshttpclient # type: ignore
 
 class storage:
     def __init__(self):
-        self.patient_values_peer = "QmX2EGscc7jbRwNtUdU9Mkp5Y7zaNUrrWrFq2v8Ai7f1GM"
-        self.emr_dict_key = "QmSQCE5pZ4jAaxdBbrZs6PKB3mWUUH2kewvJT3jEXtQQEu"
-        self.device_dict_key = "QmaZvWEJbSyptzD4bVHMZhYLjNEZn2eJAdpbBzPGzDkDuU"
+        self.patient_values_peer = ""
+        self.emr_dict_key = ""
+        self.device_dict_key = ""
         self.emr_hash = ""
         self.pt_val_hash = ""
         self.device_hash = ""
+        try:
+            self.setup()
+        except:
+            pass
+
+    def setup(self):
+        setup_dict= list()
+        with open("env.json","r") as infile:
+            setup_dict = json.load(infile)
+        self.emr_dict_key = setup_dict[0]
+        self.patient_values_peer = setup_dict[1]
+        self.device_dict_key = setup_dict[2]
 
     '''Check whether the emr_id is valid by checking emr_dict
     emr_id is given to the EMR admin when the EMR registers itself.'''
@@ -171,7 +183,7 @@ class storage:
             Thread(target = helper.upload_data,args=(folder_name,key)).start()
             #Add patient to device dictionary
             helper.add_device(helper.hash_config(config,type=1),key)
-            Thread(target = helper.upload_device_dict).start()
+            helper.upload_device_dict()
             return True
     
 #Classic Sample Patient: manan shukla 011201

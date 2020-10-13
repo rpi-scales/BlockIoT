@@ -18,7 +18,7 @@ def create_patient():
         json_data = request.get_json()
         json_data = dict(json_data)
         if json_data["party"] == "EMR":
-            store.emr_patient(json_data["config"],json_data["emr_id"])
+            print(store.emr_patient(json_data["config"],json_data["emr_id"]))
         else:
             store.device_patient(json_data["config"])
         return "Successfully Recieved"
