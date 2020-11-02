@@ -2,8 +2,14 @@
 
 ## Setup
 
-Requirements
-* IPFS <= 0.6.0!
+### Requirements
+* Install IPFS <= 0.6.0!
+
+### Python environment setup
+
+* `pip -m venv env`
+* `source env/bin/activate`
+* `pip install -r requirements.txt`
 
 ## Running
 
@@ -16,8 +22,21 @@ Requirements
 1. Make sure your IPFS Daemon is running. 
 
 2. To run the program, please run the following flask functions:
-`set FLASK_APP=receive_data.py` (windows) or `export FLASK_APP=receive_data.py` (IoS)
-`set FLASK_ENV=development` (windows) or `export FLASK_ENV=development`
+
+### Windows instructions 
+
+`set FLASK_APP=receive_data.py`
+
+`set FLASK_ENV=development`
+
+`flask run`
+
+### Linux/MacOS instructions 
+
+`export FLASK_APP=receive_data.py`
+
+`export FLASK_ENV=development`
+
 `flask run`
 
 3. Open up an http client, preferably postman. 
