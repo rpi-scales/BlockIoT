@@ -1,236 +1,70 @@
-from flask import config
-import ipfshttpclient # type: ignore
 import json
-import os
-import os.path
-import time
-from os import path
-import hashlib
+import time 
+import requests
+from datetime import datetime
+from pywebio import start_server
+from pywebio.input import input, FLOAT
+from pywebio.output import put_text
+import plotly.graph_objects as go
+from web3.auto.gethdev import w3
+import pandas as pd # type: ignore
+import plotly.express as px # type: ignore
+import plotly # type: ignore
+from collections import OrderedDict
+import ipfshttpclient # type: ignore
 
-class storage_helper:
-    def __init__(self):
-        self.patient_values_peer = ""
-        self.emr_dict_key = ""
-        self.device_dict_key = ""
-        self.emr_hash = ""
-        self.pt_val_hash = ""
-        self.device_hash = ""
-        try:
-            self.setup()
-        except:
-            pass
-
-    def setup(self):
-        setup_dict= list()
-        with open("env.json","r") as infile:
-            setup_dict = json.load(infile)
-        self.emr_dict_key = setup_dict[0]
-        self.patient_values_peer = setup_dict[1]
-        self.device_dict_key = setup_dict[2]
-
-    ######################
-    ###### GETTERS #######
-    ######################
-    def get_patient_values(self):
-        '''Retrieve patient values dictionary'''
-        hash = {}
-        hash = client.name.resolve(name=self.patient_values_peer)
-        self.pt_val_hash = list(hash.values())[0].split("/")[2]
-        client.get(self.pt_val_hash)
-        #Time out in 30 seconds
-        a = 30
-        while a > 0:
-            if path.exists(self.pt_val_hash + "/patient_values.json"):
-                break
-            else:
-                a -= 1
-                time.sleep(1)
-        with open(self.pt_val_hash + "/patient_values.json","r") as infile:
-            patient_values = json.load(infile)
-        return patient_values
-
-    def get_emr_dict(self):
-        '''Retrieve EMR Dictionary'''
-        hash = {}
-        hash = client.name.resolve(name=self.emr_dict_key)
-        self.emr_hash = list(hash.values())[0].split("/")[2]
-        client.get(self.emr_hash)
-        #Time out in 30 seconds
-        a = 30
-        while a > 0:
-            if path.exists(self.emr_hash + "/emr_dict.json"):
-                break
-            else:
-                a -= 1
-                time.sleep(1)
-        with open(self.emr_hash + "/emr_dict.json","r") as infile:
-            emr_dict = json.load(infile)
-        return emr_dict
-
-    def get_device_dict(self):
-        '''Retrieve Device Dictionary'''
-        hash = {}
-        hash = client.name.resolve(name=self.device_dict_key)
-        self.device_hash = list(hash.values())[0].split("/")[2]
-        client.get(self.device_hash)
-        with open(self.device_hash + "/device_dict.json","r") as infile:
-            device_dict = json.load(infile)
-        return device_dict
-    
-    def get_data_folder(self,data_key):
-        '''Returns data using IPNS key'''
-        hash = {}
-        hash = client.name.resolve(name=data_key)
-        folder_title= list(hash.values())[0].split("/")[2]
-        client.get(folder_title)
-        return folder_title
-
-    ######################
-    ###### SETTERS #######
-    ######################
-
-    def upload_patient_values(self):
-        '''Upload patient values dictionary'''
-        hashed_dict = client.add(self.pt_val_hash+"/patient_values.json",wrap_with_directory=True)
-        ipfs_hash = list(hashed_dict[1].values())[1]
-        client.name.publish(ipfs_hash,key=self.patient_values_peer)
-        return True
-
-    def upload_emr_dict(self):
-        '''Upload emr_dict to IPFS'''
-        hashed_dict = dict()
-        hashed_dict = client.add(self.emr_hash+"/emr_dict.json",wrap_with_directory=True)
-        ipfs_hash = list(hashed_dict[1].values())[1]
-        client.name.publish(ipfs_hash,key=self.emr_dict_key)
-        return True
-
-    def upload_device_dict(self):
-        '''Upload emr_dict to IPFS'''
-        hashed_dict = dict()
-        hashed_dict = client.add(self.device_hash+"/device_dict.json",wrap_with_directory=True)
-        ipfs_hash = list(hashed_dict[1].values())[1]
-        client.name.publish(ipfs_hash,key=self.device_dict_key)
-        return True
-
-    def upload_data(self,path,data_key):
-        '''Uploads given data into IPFS w/ IPNS key'''
-        hash = dict()
-        '''Check if path is a folder, and upload it accordingly.'''
-        if os.path.isdir(path):
-            hash = client.add(path,recursive=True)
-            client.name.publish(list(hash[-1].values())[1],key=data_key)
-            return True
-        else:
-            hash = client.add(path,wrap_with_directory=True)
-        client.name.publish(list(hash[-1].values())[1],key=data_key)
-        return True
-
-    ######################
-    ###### Modifiers #####
-    ######################
-      
-    def add_emr(self,key,value):
-        '''Adds a key/value to emr_dict'''
-        #Retrieve emr_dict
-        emr_dict = dict()
-        emr_dict = self.get_emr_dict()
-        #Add a new key if necessary
-        #If not, make a new value
-        if self.search_emr(key,value) == True:
-            return True
-        if key in emr_dict:
-            emr_dict[key].append(value)
-        else:
-            emr_dict[key] = value
-        with open(self.emr_hash+ "/emr_dict.json","w") as outfile:
-            json.dump(emr_dict,outfile)
-        return True
-
-    def add_device(self,key,value):
-        '''Adds a key/value to device_dict'''
-        #Retrieve emr_dict
-        device_dict = dict()
-        device_dict = self.get_device_dict()
-        if key in device_dict.keys() and value == device_dict[key]:
-            return True
-        else:
-            device_dict[key]=value
-            with open(self.device_hash+ "/device_dict.json","w") as outfile:
-                json.dump(device_dict,outfile)
-            return True
-
-    def add_pt_val(self,key,value):
-        '''Adds a key/value to emr_dict'''
-        #Retrieve emr_dict
-        pt_dict = dict()
-        pt_dict = self.get_patient_values()
-        if key in pt_dict.keys() and value == pt_dict[key]:
-            return True
-        else:
-            pt_dict[key]=value
-            with open(self.pt_val_hash+ "/patient_values.json","w") as outfile:
-                json.dump(pt_dict,outfile)
-            return True
-
-    #######################
-    ### Other Functions ###
-    #######################
-    def search_pt_val(self,pt_val_key,ret=False):
-        '''Search patient_value table for specific key'''
-        #Get patient values dict
-        pt_val = self.get_patient_values()
-        #Search for the key in the dict
-        if str(pt_val_key) in pt_val and ret == True:
-            return pt_val[str(pt_val_key)]
-        elif pt_val_key in pt_val.keys():
-            return True
-        else:
-            return False
-    
-    def search_emr(self,key,value):
-        '''Search emr_dict given key and value. Value must be given as well as value is a list. '''
-        #Retrieve emr_dict
-        emr_dict = self.get_emr_dict()
-        #Add a new key if necessary
-        #If not, make a new value
-        if value in emr_dict[key]:
-            return True
-        else:
-            return False
-
-    def search_device_dict(self,key,ret=False):
-        '''Search device_dict for key or value'''
-        #Retrieve device_dict
-        device_dict = self.get_device_dict()
-        if key in device_dict and ret==False:
-            return True
-        elif key in device_dict and ret==True:
-            return device_dict[key]
-        else:
-            return False
-
-    def hash_config(self,config,type=0):
-        '''Hashes the first name, last name and dob of all incoming config files'''
-        '''Why 2 types? 1 for pt values table to actually get the folder. 
-        The other one is to find the title of the file and search device_dict keys'''
-        #Collect first name, last name, dob. 
-        #Or, if it is a device, identifiers and template
-        hashed_config = ""
-        if type == 1:
-            #Ex. patient_id=124medication_id=14125template=ekg
-            for key,value in config["identifiers"].items():
-                item = str(key + "=" + config["identifiers"][key])
-                hashed_config += item
-            hashed_config+="template"+ "="+config["template"]
-        else:
-            hashed_config = "first=" + config["first_name"] + "last=" + config["last_name"]\
-            +"dob="+config["dob"]
-        return hashed_config
-   
 client = ipfshttpclient.connect()
+with open(r"/Users/manan/Documents/BlockIoT/Code/contract_data.json","r") as infile:
+    contract_data = json.load(infile)
 
-sample_get_data_request = {
-    "first_name":"manan",
-    "last_name":"shukla",
-    "dob":"01/12/2001"
-}
+class helper_functions:
+    def get_consent(self,contract):
+        key = contract.functions.get_hash().call()
+        contract_old = w3.eth.contract(address=contract_data[str(key)][2],abi=contract_data[str(key)][0],bytecode=contract_data[str(key)][1])
+        if(contract_old.functions.check_consent().call() == False):
+            consent = input("Please enter \"CONSENT\" to allow your physician to access your medical device data?")
+            if consent == "CONSENT":
+                contract_old.functions.set_consent(True).transact()
+                return True
+    
+    def publish_data(self,contract):
+        key = contract.functions.get_hash().call()
+        contract_old = w3.eth.contract(address=contract_data[str(key)][2],abi=contract_data[str(key)][0],bytecode=contract_data[str(key)][1])
+        length = contract_old.functions.get_api_length().call()
+        i = 0
+        api_call = list()
+        while i < length:
+            api_call.append(contract_old.functions.get_api_info(i).call())
+            i += 1
+        r = requests.get(api_call[1])
+        df_data = dict()
+        df_data = r.json()
+        new_df_data = dict()
+        for element in df_data.keys():
+            new_df_data[datetime.utcfromtimestamp(int(element)).strftime('%Y-%m-%d %H:%M:%S')] = df_data[element]
+        go.Figure(data=go.Scatter(x=list(new_df_data.keys()), y=list(new_df_data.values()),mode='markers',marker=dict(size=20,color="red"))).show()
+        return True
+        
+    def make_api_call(self,contract):
+        with open(r"/Users/manan/Documents/BlockIoT/Code/contract_data.json","r") as infile:
+            contract_data = json.load(infile)
+        key = contract.functions.get_hash().call()
+        contract = w3.eth.contract(address=contract_data[str(key)][2],abi=contract_data[str(key)][0],bytecode=contract_data[str(key)][1])
+        length = contract.functions.get_api_length().call()
+        config = contract.functions.get_config_file().call()
+        i = 0
+        api_call = list()
+        while i < length:
+            api_call.append(contract.functions.get_api_info(i).call())
+            i += 1
+        r = requests.get(api_call[1])
+        df_data = dict()
+        df_data = r.json()
+        key = "calc_" + json.loads(contract.functions.get_config_file().call())['template']
+        contract = w3.eth.contract(address=contract_data[str(key)][2],abi=contract_data[str(key)][0],bytecode=contract_data[str(key)][1])
+        contract.functions.set_data(str(df_data)).transact()
+        contract.functions.set_config_file(str(config)).transact()
+        contract.functions.control().transact()
+        print("Made API Call")
+        # print(contract.functions.get_event_length().call())
+        return True
