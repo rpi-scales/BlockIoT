@@ -12,10 +12,19 @@ import plotly.express as px
 import plotly
 from collections import OrderedDict
 import ipfshttpclient # type: ignore
+import os.path
+from os import path
 
 client = ipfshttpclient.connect()
-with open(r"/Users/manan/Documents/BlockIoT/Code/contract_data.json","r") as infile:
-    contract_data = json.load(infile)
+if path.exists(r"new_BlockIoT/contract_data.json"):
+    with open(r"new_BlockIoT/contract_data.json","r") as infile:
+        contract_data = json.load(infile)
+else:
+    infile = open(r"new_BlockIoT/contract_data.json","w")
+    infile.write("{}")
+    infile.close()
+    with open(r"new_BlockIoT/contract_data.json","r") as infile:
+        contract_data = json.load(infile)
 
 def get_consent(contract):
     key = contract.functions.get_hash().call()

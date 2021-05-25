@@ -7,9 +7,9 @@ import ipfshttpclient # type: ignore
 client = ipfshttpclient.connect()
 
 def deploy(name):
-    with open(r"/Users/manan/Documents/BlockIoT/Code/contract_data.json","r") as infile:
+    with open(r"new_BlockIoT/contract_data.json","r") as infile:
         contract_data = json.load(infile)
-    file1 = open(name + ".sol","r")
+    file1 = open("new_BlockIoT/" + name + ".sol","r")
     compiled_sol = compile_standard({
         "language": "Solidity",
         "sources": {
@@ -45,7 +45,7 @@ def deploy(name):
     greeter = w3.eth.contract(address=tx_receipt.contractAddress,abi=abi)
     contract_data[name] = [abi,bytecode,tx_receipt.contractAddress]
     file1.close()
-    with open(r"/Users/manan/Documents/BlockIoT/Code/contract_data.json","w") as outfile:
+    with open(r"new_BlockIoT/contract_data.json","w") as outfile:
         json.dump(contract_data, outfile)
 
 def deploy_templates(template_name):

@@ -8,7 +8,7 @@ from solidity_helper import * # type: ignore
 from blockchain import * # type: ignore
 client = ipfshttpclient.connect()
 
-with open(r"/Users/manan/Documents/BlockIoT/Code/contract_data.json","r") as infile:
+with open(r"new_BlockIoT/contract_data.json","r") as infile:
     contract_data = json.load(infile)
 
 def registration(config):
@@ -26,7 +26,7 @@ def registration(config):
     pt_contract = str(file1.read())
     pt_contract = pt_contract.replace("contract emr","contract " + key)
     # Make sure that the contract title is hashed.
-    f = open(str(key) + ".sol", "w")
+    f = open("new_BlockIoT/"+str(key) + ".sol", "w")
     f.write(pt_contract)
     f.close()
     deploy(str(key))
@@ -56,7 +56,7 @@ def generate_key(config):
 
 def add_register_data(config,key):
     contract_data = dict()
-    with open("contract_data.json","r") as infile:
+    with open(r"new_BlockIoT/contract_data.json","r") as infile:
         contract_data = json.load(infile)
     contract = w3.eth.contract(address=contract_data[key][2],abi=contract_data[key][0],bytecode=contract_data[key][1])
     contract.functions.add_biometrics(0,config["first_name"]).transact()

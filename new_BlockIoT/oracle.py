@@ -12,14 +12,14 @@ from web3.auto.gethdev import w3
 from datetime import datetime
 import ipfshttpclient # type: ignore
 
-with open(r"/Users/manan/Documents/BlockIoT/Code/contract_data.json","r") as infile:
+with open(r"new_BlockIoT/contract_data.json","r") as infile:
     contract_data = json.load(infile)
 
 #config = BlockIoT().retrieve()
 deploy_templates("calc_adherence")
 
 def make_api_call(contract):
-    with open(r"/Users/manan/Documents/BlockIoT/Code/contract_data.json","r") as infile:
+    with open(r"new_BlockIoT/contract_data.json","r") as infile:
         contract_data = json.load(infile)
     key = contract.functions.get_hash().call()
     contract = w3.eth.contract(address=contract_data[str(key)][2],abi=contract_data[str(key)][0],bytecode=contract_data[str(key)][1])
@@ -37,9 +37,10 @@ def make_api_call(contract):
     contract = w3.eth.contract(address=contract_data[str(key)][2],abi=contract_data[str(key)][0],bytecode=contract_data[str(key)][1])
     contract.functions.set_data(str(df_data)).transact()
     contract.functions.set_config_file(str(config)).transact()
+    contract.functions.set_time(str(int(datetime.now().timestamp())-3600)).transact()
+    contract.functions.set_alerttime(str(int(datetime.now().timestamp())-604800)).transact()
     contract.functions.control().transact()
     print("Made API Call")
-    # print(contract.functions.get_event_length().call())
     return True
 
 def oracle():
@@ -48,29 +49,45 @@ def oracle():
             contract = w3.eth.contract(address=contract_data[key][2],abi=contract_data[key][0],bytecode=contract_data[key][1])
             if contract.functions.return_type().call() == "register":
                 make_api_call(contract)
+                represent = 0
         for key in contract_data.keys():
             contract = w3.eth.contract(address=contract_data[key][2],abi=contract_data[key][0],bytecode=contract_data[key][1])
             length = contract.functions.get_event_length().call()
             i = 0
+            used = []
             while i < length:
                 event = contract.functions.get_event(i).call()
-                if "GetConsent" in event:
-                    get_consent(contract)
+                if event in used:
+                    event = ""
+                # if "GetConsent" in event:
+                    # get_consent(contract)
                 if "PublishData" in event:
                     publish_data(contract)
+                    used.append(event)
                 if "ParseAdherence" in event:
                     print("Parsing Adherence")
                     parse_adherence(contract)
+                    used.append(event)
                 if "CalculateAdherence" in event:
                     print("Calculating Adherence")
                     calculate_adherence(contract)
+                    used.append(event)
                 if "RepresentData" in event:
-                    print(contract.functions.return_type().call())
-                    print("Representing Adherence")
-                    represent_data(contract)
+                    if (int(datetime.now().timestamp()) - int(contract.functions.get_time().call()) > 3600):
+                        print("Representing Adherence")
+                        represent_data(contract)
+                        contract.functions.set_time(str(int(datetime.now().timestamp()))).transact()
+                        used.append(event)
+                    else:
+                        print("Time limit has passed")
                 if "SendAlert" in event:
-                    print("Sending Alert")
-                    #send_alert(event)
+                    if (int(datetime.now().timestamp()) - int(contract.functions.get_alerttime().call()) > 604800):
+                        print("Sending Alert")
+                        send_alert(event,contract)
+                        contract.functions.set_alerttime(str(int(datetime.now().timestamp()))).transact()
+                        used.append(event)
+                    else:
+                        print("Time limit for alerts has passed")
                 i += 1
             contract.functions.clear_event().call()
         time.sleep(2)
