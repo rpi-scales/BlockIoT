@@ -24,3 +24,4 @@
 2. Time limits are set to the amount of times you can request patient graphs as well as the the amount of alerts a physician can get. Physicians can request charts once an hour, and alerts are only sent once a week. 
 3. Compliance for the last 7 days(rather than 30) are calculated when sending alerts, to prevent overlaps w/ compliance every week. 
 4. The information you see in the terminal after running it is simply all events that are sent into the oracle. This helps track actions done by the program. 
+5. Sending SMSes involves using your email address, and password to set it up. Obviously, I didn't want to send over my personal Gmail password, but please feel free to test it yourself by adding in your gmail user/pass, your phone number, and carrier. 
