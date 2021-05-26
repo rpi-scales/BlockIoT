@@ -9,7 +9,7 @@ client = ipfshttpclient.connect()
 def deploy(name):
     with open(r"new_BlockIoT/contract_data.json","r") as infile:
         contract_data = json.load(infile)
-    file1 = open("new_BlockIoT/" + name + ".sol","r")
+    file1 = open("new_BlockIoT/Published/" + name + ".sol","r")
     compiled_sol = compile_standard({
         "language": "Solidity",
         "sources": {

@@ -26,11 +26,23 @@ def registration(config):
     pt_contract = str(file1.read())
     pt_contract = pt_contract.replace("contract emr","contract " + key)
     # Make sure that the contract title is hashed.
-    f = open("new_BlockIoT/"+str(key) + ".sol", "w")
+    f = open("new_BlockIoT/Published/"+str(key) + ".sol", "w")
     f.write(pt_contract)
     f.close()
     deploy(str(key))
     add_register_data(config,key) # type: ignore
+    #Publish the templates related to the patient.
+    file1 = open(r"new_BlockIoT/Contracts/calc_" + config["template"] + ".sol","r")
+    pt_contract = str(file1.read())
+    pt_contract = pt_contract.replace("contract calc_" + config["template"],"contract calc_" + config["template"] + "_" + key)
+    f = open("new_BlockIoT/Published/"+"calc_"+ config["template"] + "_" + str(key) + ".sol", "w")
+    f.write(pt_contract)
+    f.close()
+    deploy("calc_"+config["template"] + "_" + str(key))
+    add_register_data(config,key) # type: ignore
+    print("Patient " + config["first_name"] + " " + config["last_name"] + " has been registered. Template " + config["template"] + " has been published.")
+    
+    
 
 def check_config(config):
     if "first_name" in config.keys() and "last_name" in config.keys() and "dob" in config.keys():
@@ -116,15 +128,4 @@ def get_data_web():
     DOB = input("Date of Birth:", type='date',placeholder='MM-DD-YYYY')
     return [fname,lname,DOB]
 
-# Keywords such as BL_timestamp signify what type of data will be present there. 
-config= {
-    "first_name":"manan",
-    "last_name":"shukla",
-    "dob":"01-12-2001",
-    "api server": "http://localhost:8000/new_BlockIoT/server_data.json",
-    "api parameters": {},
-    "template":"adherence",
-    "identifiers":{
-        "BL_timestamp":"BL_pillstaken"
-    },
-}
+# Keywords such as BL_timestamp signify what type of data will be present there

@@ -53,6 +53,7 @@ def getpath(nested_dict, value, prepath=()):
                 return p
 
 def represent_data(contract):
+    config = ast.literal_eval(contract.functions.get_config_file().call())
     a = 0
     while(parse_adherence(contract,represent=1) == False):
         a += 1
@@ -63,7 +64,27 @@ def represent_data(contract):
     new_df_data = dict()
     for element in df_data.keys():
         new_df_data[datetime.utcfromtimestamp(int(element)).strftime('%Y-%m-%d %H:%M:%S')] = df_data[element]
-    go.Figure(data=go.Scatter(x=list(new_df_data.keys()), y=list(new_df_data.values()),mode='markers',marker=dict(size=20,color="red"))).show()
+
+    fig = go.Figure(go.Scatter(
+        x=sorted(list(new_df_data.keys())),
+        y=[x for x in range(1,100)],
+        name="Name of Trace 1"       # this sets its legend entry
+    ))
+
+    fig.update_layout(
+        title= config["adherence"]["medication_name"].capitalize() + " Compliance Report for " + config["first_name"].capitalize() + " " + config["last_name"].capitalize() + "(" + str(config["dob"]) + ")",
+        xaxis_title="Date",
+        yaxis_title="Amount of " + config["adherence"]["medication_name"].capitalize(),
+        legend_title="Legend Title",
+        font=dict(
+            family="Calibri",
+            size=16,
+            color="RebeccaPurple"
+        )
+    )
+
+    fig.show()
+    #fig = go.Figure(data=go.Scatter(x=list(new_df_data.keys()), y=list(new_df_data.values()),mode='markers',marker=dict(size=10,color="purple"))).show()
 
 #Need to fix.
 def calculate_adherence(contract):
@@ -95,6 +116,7 @@ def calculate_adherence(contract):
         if int(element) > int(day_7.timestamp()):
             days_7[element] = df_data[element]
     thirty_day_comp = sum(days_7.values())/7
+    print(str(ast.literal_eval(contract.functions.get_config_file().call())["first_name"] + " compliance: " + str(thirty_day_comp) + "%"))
     # print("Last 30 day compliance:\n")
     # for element in sorted(days_30.keys()):
     #     print(datetime.fromtimestamp(element).strftime('%Y-%m-%d %H:%M:%S') + "-->" + str(days_30[element]))

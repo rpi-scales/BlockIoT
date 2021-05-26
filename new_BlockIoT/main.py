@@ -10,7 +10,31 @@ config= {
     "first_name":"manan",
     "last_name":"shukla",
     "dob":"01-12-2001",
+    "communication":{
+        "phone":"5162708383",
+        "email":"manan.shukla2001@gmail.com",
+    },
     "api server": "http://localhost:8000/new_BlockIoT/server_data.json",
+    "api parameters": {},
+    "template":"adherence",
+    "adherence":{
+        "medication_name":"Albuterol",
+        "Dosage":"90 mcg",
+        "Times per day":"0"
+    },
+    "identifiers":{
+        "BL_timestamp":"BL_pillstaken"
+    },
+}
+config2 = {
+    "first_name":"kavin",
+    "last_name":"shukla",
+    "dob":"01-12-2001",
+    "communication":{
+        "phone":"5162708383",
+        "email":"manan.shukla2001@gmail.com",
+    },
+    "api server": "http://localhost:8000/new_BlockIoT/server_data2.json",
     "api parameters": {},
     "template":"adherence",
     "adherence":{
@@ -24,6 +48,5 @@ config= {
 }
 
 registration(config)
-deploy("calc_adherence")
-print("Patient is Registered")
+registration(config2)
 oracle()
