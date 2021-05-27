@@ -4,6 +4,7 @@ from adherence_helper import * # type: ignore
 from solidity_helper import * # type: ignore
 from blockchain import * # type: ignore
 from oracle import * # type: ignore
+from threading import Thread
 
 # Keywords such as BL_timestamp signify what type of data will be present there. 
 config= {
@@ -49,4 +50,15 @@ config2 = {
 
 registration(config)
 registration(config2)
-oracle()
+
+#To view a patient's data...
+patient_1 = {
+    "first_name":"kavin",
+    "last_name":"shukla",
+    "dob":"01-12-2001"
+}
+t1 = Thread(target=oracle).start()
+time.sleep(4)
+t2 = Thread(target=retrieve_data,args=(patient_1,)).start()
+
+

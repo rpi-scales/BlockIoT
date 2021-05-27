@@ -100,10 +100,14 @@ contract calc_adherence_k2k4r8jtm3e9xzn6xq6gc9n7tz3foa6ys5u67oxowky6kub5fnpfgnee
         return ipfs_hash;
     }
 
+    function represent() public returns (bool) {
+        the_event.push("RepresentData");
+        return true;
+    }
+
     function control() public returns (bool){
         the_event.push("ParseAdherence");
         the_event.push("CalculateAdherence");
-        the_event.push("RepresentData");
         return true;
     }
 }

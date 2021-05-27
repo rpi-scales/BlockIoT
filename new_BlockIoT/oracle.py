@@ -10,7 +10,7 @@ from pywebio.input import input, FLOAT
 from pywebio.output import put_text
 from web3.auto.gethdev import w3
 from datetime import datetime
-import ipfshttpclient # type: ignore
+import ast
 
 with open(r"new_BlockIoT/contract_data.json","r") as infile:
     contract_data = json.load(infile)
@@ -43,6 +43,17 @@ def make_api_call(contract):
     print("Made API Call")
     return True
 
+def retrieve_data(patient):
+    with open(r"new_BlockIoT/contract_data.json","r") as infile:
+        contract_data = json.load(infile)
+    for key in contract_data.keys():
+        contract = w3.eth.contract(address=contract_data[key][2],abi=contract_data[key][0],bytecode=contract_data[key][1])
+        if contract.functions.return_type().call() == "calculator":
+            config = ast.literal_eval(contract.functions.get_config_file().call())
+            if config["first_name"] == patient["first_name"]:
+                if config["last_name"] == patient["last_name"]:
+                    contract.functions.represent().transact()
+                    break
 def oracle():
     while True:
         for key in contract_data.keys():
