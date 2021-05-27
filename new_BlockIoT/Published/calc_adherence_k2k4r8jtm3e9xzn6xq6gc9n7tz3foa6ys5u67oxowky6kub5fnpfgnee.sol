@@ -90,6 +90,11 @@ contract calc_adherence_k2k4r8jtm3e9xzn6xq6gc9n7tz3foa6ys5u67oxowky6kub5fnpfgnee
         }
         return true;
     }
+
+    function set_hash(string memory value) public returns (bool) {
+        ipfs_hash = value;
+        return true;
+    }
     
     function get_hash() public view returns (string memory) {
         return ipfs_hash;

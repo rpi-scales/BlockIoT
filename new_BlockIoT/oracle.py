@@ -20,8 +20,8 @@ with open(r"new_BlockIoT/contract_data.json","r") as infile:
 def make_api_call(contract):
     with open(r"new_BlockIoT/contract_data.json","r") as infile:
         contract_data = json.load(infile)
-    key = contract.functions.get_hash().call()
-    contract = w3.eth.contract(address=contract_data[str(key)][2],abi=contract_data[str(key)][0],bytecode=contract_data[str(key)][1])
+    old_key = contract.functions.get_hash().call()
+    contract = w3.eth.contract(address=contract_data[str(old_key)][2],abi=contract_data[str(old_key)][0],bytecode=contract_data[str(old_key)][1])
     length = contract.functions.get_api_length().call()
     config = contract.functions.get_config_file().call()
     i = 0
@@ -32,8 +32,9 @@ def make_api_call(contract):
     r = requests.get(api_call[1])
     df_data = dict()
     df_data = r.json()
-    key = "calc_" + json.loads(contract.functions.get_config_file().call())['template'] + "_" + str(key)
+    key = "calc_" + json.loads(contract.functions.get_config_file().call())['template'] + "_" + str(old_key)
     contract = w3.eth.contract(address=contract_data[str(key)][2],abi=contract_data[str(key)][0],bytecode=contract_data[str(key)][1])
+    contract.functions.set_hash(old_key).transact()
     contract.functions.set_data(str(df_data)).transact()
     contract.functions.set_config_file(str(config)).transact()
     contract.functions.set_time(str(int(datetime.now().timestamp())-3600)).transact()
@@ -86,7 +87,6 @@ def oracle():
                         print("Time limit for alerts has passed")
                 i += 1
             contract.functions.clear_event().call()
-        exit(0)
         time.sleep(2)
 
     with open("contract_data.json","w") as outfile:
