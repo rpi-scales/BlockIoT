@@ -12,11 +12,12 @@
 1. On one terminal, run "ipfs daemon"
 2. On another, run "geth --dev --ipcpath ~/Library/Ethereum/geth.ipc"
 3. To simulate some sample data, run "python3 -m http.server 8000" as a test server in another terminal
-4. Run "python3.8 [path_to_main.py]"
+4. Run "python3.8 path_to_main/main.py"
 
 ## Notes when Running
 
 1. You may expect an error the first 1-2 times you run the code. This is simply coming from the ethereum chain. It should resolve itself when you run it again.
+2. To see the full functionality, please run step 4 3-4 times(this may be to give the smart contracts time to deploy, but I'm not sure).
 
 ## Important Highlights to Look At
 
