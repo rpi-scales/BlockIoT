@@ -1,64 +1,48 @@
-
+from threading import Thread
 from register import * # type: ignore
 from adherence_helper import * # type: ignore
 from solidity_helper import * # type: ignore
 from blockchain import * # type: ignore
 from oracle import * # type: ignore
-from threading import Thread
+import schedule,os
 
 # Keywords such as BL_timestamp signify what type of data will be present there. 
-config= {
-    "first_name":"manan",
-    "last_name":"shukla",
-    "dob":"01-12-2001",
-    "communication":{
-        "phone":"5162708383",
-        "email":"manan.shukla2001@gmail.com",
-    },
-    "api server": "http://localhost:8000/new_BlockIoT/server_data.json",
-    "api parameters": {},
-    "template":"adherence",
-    "adherence":{
-        "medication_name":"Albuterol",
-        "Dosage":"90 mcg",
-        "Times per day":"0"
-    },
-    "identifiers":{
-        "BL_timestamp":"BL_pillstaken"
-    },
-}
-config2 = {
-    "first_name":"kavin",
-    "last_name":"shukla",
-    "dob":"01-12-2001",
-    "communication":{
-        "phone":"5162708383",
-        "email":"manan.shukla2001@gmail.com",
-    },
-    "api server": "http://localhost:8000/new_BlockIoT/server_data2.json",
-    "api parameters": {},
-    "template":"adherence",
-    "adherence":{
-        "medication_name":"Albuterol",
-        "Dosage":"90 mcg",
-        "Times per day":"0"
-    },
-    "identifiers":{
-        "BL_timestamp":"BL_pillstaken"
-    },
-}
 
-registration(config)
-registration(config2)
-
+with open(r"contract_data.json","w") as infile:
+    json.dump({},infile)
+config = list()
+with open("configs.json") as f:
+    config = json.load(f)
+for element in config:
+    registration(element)
 #To view a patient's data...
 patient_1 = {
     "first_name":"kavin",
     "last_name":"shukla",
     "dob":"01-12-2001"
 }
-t1 = Thread(target=oracle).start()
-time.sleep(4)
-t2 = Thread(target=retrieve_data,args=(patient_1,)).start()
+def oracle_handler():
+    while True:
+        oracle()
+        time.sleep(1)
+        schedule.run_pending()
+        time.sleep(1)
 
+def retrieve():
+    while True:
+        time.sleep(1)
+        some_data = dict()
+        with open("command.json") as f:
+            some_data = json.load(f)
+            f.close()
+        if some_data != {}:
+            print("Got it")
+            retrieve_data(some_data)
+            with open("command.json","w") as f:
+                json.dump({},f)
+                f.close()
+        time.sleep(1)
 
+t1 = Thread(target=oracle_handler).start()
+time.sleep(1)
+t2 = Thread(target=retrieve).start()

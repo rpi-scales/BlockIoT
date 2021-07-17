@@ -1,14 +1,14 @@
 
 from web3.auto.gethdev import w3
 import json
-import ipfshttpclient # type: ignore
 from register import * # type: ignore
 from adherence_helper import * # type: ignore
 from solidity_helper import * # type: ignore
 from blockchain import * # type: ignore
+from oracle import * # type: ignore
+import ipfshttpclient # type: ignore
 client = ipfshttpclient.connect()
-
-with open(r"new_BlockIoT/contract_data.json","r") as infile:
+with open(r"contract_data.json","r") as infile:
     contract_data = json.load(infile)
 
 def registration(config):
@@ -22,24 +22,23 @@ def registration(config):
     #Create shorthand, and hash it.
     key = generate_key(config) # type: ignore
     #Create smart contract
-    file1 = open(r"new_BlockIoT/Contracts/register.sol","r")
+    file1 = open(r"Contracts/register.sol","r")
     pt_contract = str(file1.read())
     pt_contract = pt_contract.replace("contract emr","contract " + key)
     # Make sure that the contract title is hashed.
-    f = open("new_BlockIoT/Published/"+str(key) + ".sol", "w")
+    f = open("Published/"+str(key) + ".sol", "w")
     f.write(pt_contract)
     f.close()
     deploy(str(key))
     add_register_data(config,key) # type: ignore
     #Publish the templates related to the patient.
-    file1 = open(r"new_BlockIoT/Contracts/calc_" + config["template"] + ".sol","r")
+    file1 = open(r"Contracts/calc_" + config["template"] + ".sol","r")
     pt_contract = str(file1.read())
     pt_contract = pt_contract.replace("contract calc_" + config["template"],"contract calc_" + config["template"] + "_" + key)
-    f = open("new_BlockIoT/Published/"+"calc_"+ config["template"] + "_" + str(key) + ".sol", "w")
+    f = open("Published/"+"calc_"+ config["template"] + "_" + str(key) + ".sol", "w")
     f.write(pt_contract)
     f.close()
     deploy("calc_"+config["template"] + "_" + str(key))
-    add_register_data(config,key) # type: ignore
     print("Patient " + config["first_name"] + " " + config["last_name"] + " has been registered. Template " + config["template"] + " has been published.")
     
     
@@ -68,7 +67,7 @@ def generate_key(config):
 
 def add_register_data(config,key):
     contract_data = dict()
-    with open(r"new_BlockIoT/contract_data.json","r") as infile:
+    with open(r"contract_data.json","r") as infile:
         contract_data = json.load(infile)
     contract = w3.eth.contract(address=contract_data[key][2],abi=contract_data[key][0],bytecode=contract_data[key][1])
     contract.functions.add_biometrics(0,config["first_name"]).transact()
@@ -85,47 +84,3 @@ def add_register_data(config,key):
     contract.functions.set_consent(False).transact()
     contract.functions.control().transact()
     return True
-
-def retrieve():
-    config = self.get_data_web()
-    hashed_config = "first=" + config[0] + "last=" + config[1]+"dob="+config[2]
-    found = False
-    old_key = ""
-    for element in client.key.list()['Keys']:
-        if list(element.values())[0] == hashed_config:
-            old_key = list(element.values())[1]
-            found = True
-            break
-    if found == False:
-        print("Patient not registered!")
-        exit(0)
-    # Create Transaction
-    w3.eth.send_transaction({'to': w3.eth.coinbase, 'from': w3.eth.coinbase})
-    file1 = open(r"new_BlockIoT/retrieve.sol","r")
-    pt_contract = str(file1.read())
-    pt_contract = pt_contract.replace("contract retrieve","contract " + old_key + "_retrieve")
-    pt_contract = pt_contract.replace("Base",old_key)
-    # Make sure that the contract title is hashed.
-    f = open(str(old_key) + "_retrieve.sol", "w")
-    f.write(pt_contract)
-    f.close()
-    deploy(str(old_key) + "_retrieve")
-    contract_data = dict()
-    with open("contract_data.json","r") as infile:
-        contract_data = json.load(infile)
-    contract = w3.eth.contract(address=contract_data[str(old_key) + "_retrieve"][2],abi=contract_data[str(old_key) + "_retrieve"][0],bytecode=contract_data[str(old_key) + "_retrieve"][1])
-    contract.functions.set_hash(old_key).transact()
-    contract.functions.set_watch_addr(contract_data[old_key][2]).transact()
-    times = contract.functions.get_time().call()
-    contract.functions.set_time(times + 600).transact()
-    contract_old = w3.eth.contract(address=contract_data[str(old_key)][2],abi=contract_data[str(old_key)][0],bytecode=contract_data[str(old_key)][1])
-    contract.functions.handle_retrieve().transact()
-    return config
-    
-def get_data_web():
-    fname = input("First Name?")
-    lname = input("Last Name?")
-    DOB = input("Date of Birth:", type='date',placeholder='MM-DD-YYYY')
-    return [fname,lname,DOB]
-
-# Keywords such as BL_timestamp signify what type of data will be present there

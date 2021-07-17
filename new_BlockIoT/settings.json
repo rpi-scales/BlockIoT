@@ -1,0 +1,9 @@
+{
+    "python.pythonPath": "/usr/local/bin/python3",
+    "python.formatting.provider": "black",
+    "Alert Fatigue Delay(in seconds)":"604800",
+    "Delay for Representing Data(in seconds)":"3600",
+    "personal email address":"manan.shukla2001@gmail.com",
+    "personal email password":"Manan011201",
+    "personal phone number":"5162708383"
+}

@@ -1,6 +1,6 @@
-pragma solidity >=0.4.16;
+pragma solidity >0.5.16;
 
-contract emr {
+contract k2k4r8mt7f9ka8sogn0up0cdtrastgyk0s5s3uff13ft2krovd3hehhg {
     string[3] biometrics; //First name, last name, dob
     string[] api_info; //every odd = key, every even = value. Ex. api_server,medtronic, patient_id,11234
     string config_file; //Same as above. Ex. "Template","adherence",pills taken,compliance

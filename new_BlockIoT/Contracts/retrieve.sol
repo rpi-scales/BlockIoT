@@ -1,4 +1,4 @@
-pragma solidity >0.5.16;
+pragma solidity >=0.4.16;
 
 contract retrieve {
     string ipfs_hash;

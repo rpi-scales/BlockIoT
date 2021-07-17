@@ -1,6 +1,6 @@
-pragma solidity >=0.4.16;
+pragma solidity >0.5.16;
 
-contract calc_adherence {
+contract calc_adherence_k2k4r8mt7f9ka8sogn0up0cdtrastgyk0s5s3uff13ft2krovd3hehhg {
     string data;
     string ipfs_hash;
     string[] the_event;
