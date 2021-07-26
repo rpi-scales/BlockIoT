@@ -7,6 +7,10 @@ from solidity_helper import * # type: ignore
 from blockchain import * # type: ignore
 from oracle import * # type: ignore
 import ipfshttpclient # type: ignore
+from pathlib import Path
+
+PUBLISED_SMART_CONTRACT_FOLDER = 'Published/'
+
 client = ipfshttpclient.connect()
 with open(r"contract_data.json","r") as infile:
     contract_data = json.load(infile)
@@ -25,8 +29,12 @@ def registration(config):
     file1 = open(r"Contracts/register.sol","r")
     pt_contract = str(file1.read())
     pt_contract = pt_contract.replace("contract emr","contract " + key)
+
+    #Create the Published directory if it does not exist
+    Path(PUBLISED_SMART_CONTRACT_FOLDER).mkdir(parents=True, exist_ok=True)
+
     # Make sure that the contract title is hashed.
-    f = open("Published/"+str(key) + ".sol", "w")
+    f = open("PUBLISED_SMART_CONTRACT_FOLDER"+str(key) + ".sol", "w")
     f.write(pt_contract)
     f.close()
     deploy(str(key))
