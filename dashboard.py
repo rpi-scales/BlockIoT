@@ -67,3 +67,4 @@ def update_output(n_clicks,fname,lname,dob):
         
 
 app.run_server(host='0.0.0.0')
+#http://0.0.0.0:8050

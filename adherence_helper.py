@@ -24,7 +24,7 @@ physician_pref = {
 }
 
 def parse_adherence(contract):
-    with open("new_BlockIoT/contract_data.json","r") as infile:
+    with open("contract_data.json","r") as infile:
         contract_data = json.load(infile)
     config = contract.functions.get_config_file().call()
     key = "calc_" + ast.literal_eval(config)["template"]+ "_" + str(contract.functions.get_hash().call())
@@ -85,7 +85,7 @@ def represent_data(contract):
         height=800
     )
     #fig.show()
-    with open("new_BlockIoT/graph.json", 'w') as f:
+    with open("/graph.json", 'w') as f:
         f.write(fig.to_json())
     #fig = go.Figure(data=go.Scatter(x=list(new_df_data.keys()), y=list(new_df_data.values()),mode='markers',marker=dict(size=10,color="purple"))).show()
 
@@ -126,7 +126,7 @@ def calculate_adherence(contract):
     #     print(datetime.fromtimestamp(element).strftime('%Y-%m-%d %H:%M:%S') + "-->" + str(days_30[element]))
     # print(thirty_day_comp)
     # print("Max: " + str(max(days_30.values())))
-    with open("new_BlockIoT/contract_data.json","r") as infile:
+    with open("contract_data.json","r") as infile:
         contract_data = json.load(infile)
     key = "calc_" + ast.literal_eval(contract.functions.get_config_file().call())['template'] + "_" + str(contract.functions.get_hash().call())
     contracts = w3.eth.contract(address=contract_data[str(key)][2],abi=contract_data[str(key)][0],bytecode=contract_data[str(key)][1])
@@ -173,7 +173,7 @@ def daily_summary(contract):
         send(config["communication"]["phone"],"Hey, you forgot to take your medication today! No worries- please remember to do it tomorrow :)")
 
 def send_alert(event,contract):
-    with open("new_BlockIoT/contract_data.json","r") as infile:
+    with open("contract_data.json","r") as infile:
         contract_data = json.load(infile)
     config = ast.literal_eval(contract.functions.get_config_file().call())
     key = "calc_" + json.loads(contract.functions.get_config_file().call())['template'] + "_" + str(contract.functions.get_hash().call())

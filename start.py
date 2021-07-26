@@ -4,7 +4,7 @@ from subprocess import DEVNULL, call
 
 
 def start_ethereum():
-    call(["/home/ec2-user/go/bin/geth","--dev","--ipcpath","/home/ec2-user/.ethereum/geth.ipc"],stderr=DEVNULL,stdout=DEVNULL)
+    call(["geth","--dev","--ipcpath","~/Library/Ethereum/geth.ipc"],stderr=DEVNULL,stdout=DEVNULL)
 
 def start_ipfs():
     call(["ipfs","daemon"],stderr=DEVNULL,stdout=DEVNULL)

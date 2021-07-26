@@ -1,5 +1,5 @@
 import json
-from solc import compile_standard # type: ignore
+from solcx import compile_standard
 from web3 import Web3
 from web3 import EthereumTesterProvider
 from web3.auto.gethdev import w3

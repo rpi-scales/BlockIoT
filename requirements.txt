@@ -17,6 +17,8 @@ eth-keys==0.3.3
 eth-rlp==0.2.1
 eth-typing==2.2.2
 eth-utils==1.10.0
+gevent==21.1.2
+greenlet==1.1.0
 hexbytes==0.2.1
 idna==3.2
 ipfshttpclient==0.7.0
@@ -32,6 +34,7 @@ plotly==5.1.0
 pretty-errors==1.2.23
 protobuf==3.17.3
 py-solc==3.2.0
+py-solc-x==1.1.0
 pycryptodome==3.10.1
 pyperclip==1.8.2
 pyrsistent==0.18.0
@@ -51,3 +54,5 @@ varint==1.0.2
 web3==5.21.0
 websockets==9.1
 yarl==1.6.3
+zope.event==4.5.0
+zope.interface==5.4.0
