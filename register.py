@@ -1,6 +1,6 @@
 
 from web3.auto.gethdev import w3
-import json
+import json,os
 from register import * # type: ignore
 from adherence_helper import * # type: ignore
 from solidity_helper import * # type: ignore
@@ -12,6 +12,12 @@ with open(r"contract_data.json","r") as infile:
     contract_data = json.load(infile)
 
 def registration(config):
+    if os.path.isdir("Published") == False:
+        os.mkdir("Published")
+    if os.path.isfile("contract_data.json") == False:
+        with open("contract_data.json","w") as f:
+            json.dump({},f)
+            f.close()
     '''Only for device:
     1. We get the api call to make to the Medtronic server
     2. We use a standard or multiple standards to define incoming data. 

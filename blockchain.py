@@ -3,20 +3,18 @@ from solc import compile_standard # type: ignore
 from web3 import Web3
 from web3 import EthereumTesterProvider
 from web3.auto.gethdev import w3
+import ipfshttpclient # type: ignore
+client = ipfshttpclient.connect()
 
 def deploy(name):
     with open(r"contract_data.json","r") as infile:
         contract_data = json.load(infile)
-    file1 = open("Published/" + name + ".sol","r")
-    file2 = open("Published/provable.sol","r")
+    file1 = open("Published/"+name + ".sol","r")
     compiled_sol = compile_standard({
         "language": "Solidity",
         "sources": {
             name + ".sol": {
                 "content": file1.read()
-            },
-            "provable.sol":{
-                "content": file2.read()
             }
         },
         "settings":
