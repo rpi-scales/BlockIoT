@@ -1,4 +1,0 @@
-git remote add origin https://github.com/rpi-scales/BlockIoT.git
-git add .
-git commit -m "Updated parse-search" 
-git push -f origin main
