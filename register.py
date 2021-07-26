@@ -40,7 +40,7 @@ def registration(config):
     Path(PUBLISED_SMART_CONTRACT_FOLDER).mkdir(parents=True, exist_ok=True)
 
     # Make sure that the contract title is hashed.
-    f = open("PUBLISED_SMART_CONTRACT_FOLDER"+str(key) + ".sol", "w")
+    f = open(PUBLISED_SMART_CONTRACT_FOLDER+str(key) + ".sol", "w")
     f.write(pt_contract)
     f.close()
     deploy(str(key))
