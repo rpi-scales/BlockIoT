@@ -4,3 +4,4 @@ git_stuff.txt
 __pycache__
 env
 *.pyc
+.vscode
