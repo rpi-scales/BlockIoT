@@ -1,11 +1,15 @@
 # BlockIoT
 
 ## Setup
+1. `python -m venv env`
+2. `source env/bin/activate`
+3. `pip install -r requirements.txt`
 
 ### Requirements
 1. IPFS(for hashing purposes only)
 2. Ethereum Geth
 3. Python 3.8
+4. Python package requirements in `requirements.txt`. To install, please run `pip install -r requirements.txt`.
 
 ## Running
 
