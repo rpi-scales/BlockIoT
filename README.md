@@ -15,8 +15,8 @@
 
 1. On one terminal, run "ipfs daemon"
 2. On another, run "geth --dev --ipcpath ~/Library/Ethereum/geth.ipc"
-3. To simulate some sample data, run "python3 -m http.server 8000" as a test server in another terminal
-4. Run "python3.8 path_to_main/main.py"
+3. To simulate some sample data, run "python -m http.server 8000" as a test server in another terminal
+4. Run "python path_to_main/main.py"
 
 ## Notes when Running
 
