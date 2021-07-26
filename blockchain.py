@@ -8,11 +8,15 @@ def deploy(name):
     with open(r"contract_data.json","r") as infile:
         contract_data = json.load(infile)
     file1 = open("Published/" + name + ".sol","r")
+    file2 = open("Published/provable.sol","r")
     compiled_sol = compile_standard({
         "language": "Solidity",
         "sources": {
             name + ".sol": {
                 "content": file1.read()
+            },
+            "provable.sol":{
+                "content": file2.read()
             }
         },
         "settings":
