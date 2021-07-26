@@ -1,4 +1,4 @@
-pragma solidity >=0.4.16;
+pragma solidity >=0.5.4;
 
 contract alert {
     string ipfs_hash;
